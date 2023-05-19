@@ -5,7 +5,8 @@ import Modal from "../../components/Modal";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import trump from "../../images/trump.jpg"
+import trump from "../../images/trump.jpg";
+import billi from "../../images/billiAngel.jpg";
 
 function TrainerProfilePage() {
     const [user, setUser] = useState();
@@ -62,7 +63,7 @@ function TrainerProfilePage() {
         <div className="w-full h-full p-8 text-black  flex flex-row">
             {showModalDelete && <Modal onClose={handleCloseModal} >
                 <div className="text-xl p-4">{message}</div>
-                <img src={billy} alt="billy" />
+                <img src={billi} alt="billy" />
                 {showModalButton && <div className="h-36 flex flex-row items-center justify-center">
                     <button onClick={handleDelete} className="bg-red-500 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Да!</button>
                 </div>}
