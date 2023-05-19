@@ -37,6 +37,7 @@ function NewLessonsPage() {
             .then((res) => {
                 setMessage(res);
                 getLessons(selectedUser);
+                handleCloseModal();
             })
             .catch((err) => {
                 setMessage(err);
@@ -89,8 +90,8 @@ function NewLessonsPage() {
             time: '',
             pay: 'false',
             typeid: '2',
-            room: '1',
-            trainer: '1',
+            room: `${rooms[0].id}`,
+            trainer: `${trainers[0].id}`,
             comment: '',
         })
         setShowNewButton(true);
@@ -108,6 +109,7 @@ function NewLessonsPage() {
                     .then((res) => {
                         setMessage(res);
                         getLessons();
+                        handleCloseModal();
                     })
                     .catch((err) => {
                         setMessage(err);

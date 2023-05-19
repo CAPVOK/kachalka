@@ -83,9 +83,9 @@ function TrainersPage() {
             id: "",
             name: "",
             surname: "",
-            age: "",
+            age: "18",
             phone: "",
-            specialization: "",
+            specialization: "Бег",
             password: "",
         })
         setShowNewButton(true);
@@ -93,12 +93,12 @@ function TrainersPage() {
     };
 
     const handleNew = () => {
-        if (formData.name && formData.surname && formData.age && formData.specialization && formData.phone && formData.password) {
+        if (formData.name && formData.surname && formData.age && formData.specialization && formData.phone && formData.password.toString()) {
             console.log(`trainers ( name, surname, age, phone, specialization, password ) VALUES (name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', specialization='${formData.specialization}', password='${formData.password}')`);
             invoke("new_anything", { data: `trainers ( name, surname, age, phone, specialization, password ) VALUES ('${formData.name}', '${formData.surname}', '${formData.age}', '${formData.phone}', '${formData.specialization}', '${formData.password}')` })
                 .then((res) => {
                     setMessage(res);
-                    setUsers([]);
+                    getTrainers();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -136,19 +136,19 @@ function TrainersPage() {
                 <div className="flex flex-col gap-2">
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Имя</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.name} name="name" onChange={handleInputChange} />
+                        <input placeholder="Имя" className="p-1 hover:bg-blue-600/10" type="text" value={formData.name} name="name" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Фамилия</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.surname} name="surname" onChange={handleInputChange} />
+                        <input placeholder="Фамилия" className="p-1 hover:bg-blue-600/10" type="text" value={formData.surname} name="surname" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Возраст</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.age} name="age" onChange={handleInputChange} />
+                        <input placeholder="Возраст" className="p-1 hover:bg-blue-600/10" type="text" value={formData.age} name="age" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Телефон</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.phone} name="phone" onChange={handleInputChange} />
+                        <input placeholder="Телефон" className="p-1 hover:bg-blue-600/10" type="text" value={formData.phone} name="phone" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Специализация</label>

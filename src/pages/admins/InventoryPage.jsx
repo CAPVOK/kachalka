@@ -80,8 +80,8 @@ function InventoryPage() {
         setFormData({
             id: '',
             description: '',
-            categoryid: '1',
-            roomid: '1',
+            categoryid: `${categories[0].id}`,
+            roomid: `${rooms[0].id}`,
         })
         setShowNewButton(true);
         setShowModalEdit(true);

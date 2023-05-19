@@ -8,7 +8,7 @@ function NavTrainer () {
     return(<>
         <header className="w-full p-4 flex flex-row justify-around">
             <NavLink to="main" className={({isActive})=>(isActive ? active : noActive)}>Аккаунт</NavLink>
-            <NavLink to="myLessons" className={({isActive})=>(isActive ? active : noActive)}>Мои тренировки</NavLink>
+            <NavLink to="myLessons" className={({isActive})=>(isActive ? active : noActive)}>Tренировки</NavLink>
             <NavLink to="/" className='flex p-4 font-bold rounded-lg border-2 border-red-500 text-white bg-red-500 scale-105'>Выйти</NavLink>
         </header>
 

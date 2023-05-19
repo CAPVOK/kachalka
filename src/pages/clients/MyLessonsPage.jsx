@@ -22,6 +22,15 @@ function MyLessonsPage() {
             .then((res) => {
                 setMessage(res);
                 getLessons(ClientId);
+                handleCloseModal();
+                if (selectedUser.typeid === 2) {
+
+                    invoke("delete_anything", { table: "lessons", condition: `WHERE id = '${selectedUser.id}'` })
+                        .then((res) => {
+                            getLessons(ClientId);
+                        })
+                        .catch((err) => { setMessage(err); console.log(err) })
+                }
             })
             .catch((err) => { setMessage(err) })
     };
@@ -46,6 +55,7 @@ function MyLessonsPage() {
             .then((res) => {
                 setMessage(res);
                 getLessons(ClientId);
+                handleCloseModal();
             })
             .catch((err) => {
                 setMessage(err);
@@ -117,7 +127,7 @@ function MyLessonsPage() {
                                 <td className="px-6 py-4 whitespace-nowrap">{lesson.typeid === 2 ? (lesson.pay ? "Оплачено" : "Не оплачено") : "Оплачено"}</td>
                                 <td className="px-6 py-4 whitespace-normal flex flex-row justify-start">
                                     <button onClick={(() => { handlePrevDelete(lesson); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Отменить</button>
-                                    {(lesson.typeid === 2 && !lesson.pay)&& <button onClick={(() => { handlePrevPay(); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Оплатить</button>}
+                                    {(lesson.typeid === 2 && !lesson.pay) && <button onClick={(() => { handlePrevPay(); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Оплатить</button>}
                                 </td>
                             </tr>
                         </>

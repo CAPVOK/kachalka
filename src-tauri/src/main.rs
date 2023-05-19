@@ -15,7 +15,7 @@ struct User {
     age: i32,
     phone: String,
     user_type: String,
-    card: i32,
+    card: String,
     specialization: String,
 }
 
@@ -106,7 +106,7 @@ async fn get_user_by_phone(
         age: 0,
         phone: row.get("phone"),
         user_type: String::from(table_name),
-        card: 0,
+        card: String::new(),
         specialization: String::from(""),
     };
 
@@ -121,7 +121,7 @@ async fn get_all_users(
 ) -> Result<Option<Vec<User>>, String> {
     let query = match user_type {
         "clients" => format!(
-            "SELECT id, name, surname, phone, age, card FROM clients {}",
+            "SELECT id, name, surname, phone, age, card::text FROM clients {}",
             condition
         ),
         "trainers" => {
@@ -148,7 +148,7 @@ async fn get_all_users(
             age: 0,
             phone: String::new(),
             user_type: String::new(),
-            card: 0,
+            card: String::new(),
             specialization: String::new(),
         };
 
@@ -160,7 +160,7 @@ async fn get_all_users(
                 age: row.get("age"),
                 phone: row.get("phone"),
                 user_type: String::from(user_type),
-                card: row.get("card"),
+                card: row.try_get("card").unwrap_or(String::new()),
                 specialization: String::new(),
             };
         } else {
@@ -171,7 +171,7 @@ async fn get_all_users(
                 age: row.get("age"),
                 phone: row.get("phone"),
                 user_type: String::from(user_type),
-                card: 0,
+                card: String::new(),
                 specialization: row.get("specialization"),
             };
         }
@@ -380,7 +380,7 @@ async fn get_lesson_clients(
             age: 0,
             phone: String::new(),
             user_type: String::new(),
-            card: 0,
+            card: String::new(),
             specialization: String::new(),
         };
         clients.push(client);

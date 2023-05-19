@@ -40,8 +40,8 @@ function ClientsPage() {
     };
 
     const handleEdit = () => {
-        if (formData.name && formData.surname && formData.age && formData.card && formData.phone) {
-            invoke("edit_anything", { table: 'clients', data: `name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', card='${formData.card}'`, condition: `where id='${formData.id}'` })
+        if (formData.name && formData.surname && formData.age && formData.phone) {
+            invoke("edit_anything", { table: 'clients', data: `name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', card='${!formData.card ? cards[0].id : formData.card} '`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
                     getClients();
@@ -85,7 +85,7 @@ function ClientsPage() {
             surname: "",
             age: "",
             phone: "",
-            card: "1",
+            card: `${cards[0].id}`,
             password: "",
         })
         setShowNewButton(true);
@@ -115,6 +115,7 @@ function ClientsPage() {
         invoke("get_all_users", { user_type: "clients", condition: '' })
         .then((res) => {
             setUsers(res);
+            console.log(res);
         }).catch((err) => console.log(err));
     };
 
@@ -123,6 +124,7 @@ function ClientsPage() {
         invoke("get_cards")
             .then((res) => {
                 setCards(res);
+                console.log(res);
             })
             .catch((err) => { console.log(err) });
     }, [])
@@ -140,19 +142,19 @@ function ClientsPage() {
                 <div className="flex flex-col gap-2">
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-20">Имя</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.name} name="name" onChange={handleInputChange} />
+                        <input placeholder="Имя" className="p-1 hover:bg-blue-600/10" type="text" value={formData.name} name="name" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-20">Фамилия</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.surname} name="surname" onChange={handleInputChange} />
+                        <input placeholder="Фамилия" className="p-1 hover:bg-blue-600/10" type="text" value={formData.surname} name="surname" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-20">Возраст</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.age} name="age" onChange={handleInputChange} />
+                        <input placeholder="Возраст" className="p-1 hover:bg-blue-600/10" type="text" value={formData.age} name="age" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-20">Телефон</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.phone} name="phone" onChange={handleInputChange} />
+                        <input placeholder="Телефон" className="p-1 hover:bg-blue-600/10" type="text" value={formData.phone} name="phone" onChange={handleInputChange} />
                     </div>
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-20">Карта</label>
@@ -165,7 +167,7 @@ function ClientsPage() {
                     {showNewButton &&
                         <div className="flex flex-row gap-4">
                             <label className="text-gray-500 w-20">Пароль</label>
-                            <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.password} name="password" onChange={handleInputChange} />
+                            <input placeholder="Пароль" className="p-1 hover:bg-blue-600/10" type="text" value={formData.password} name="password" onChange={handleInputChange} />
                         </div>
                     }
                     <div>
@@ -202,7 +204,7 @@ function ClientsPage() {
                                 <td className="px-6 py-4 whitespace-nowrap">{user.surname}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{user.age}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{user.phone}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{cards.length > 0 ? cards.find((card) => card.id === user.card).name : user.card}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{(cards.length > 0 && user.card ) ? cards.find((card) => card.id === Number(user.card)).name : 'Нет карты'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <button className="text-indigo-600 hover:text-indigo-900 mr-2" onClick={() => { setSelectedUser(user); handlePrevEdit(user) }}>
                                         Edit

@@ -138,9 +138,9 @@ function LessonsPage() {
             date: '',
             time: '',
             pay: 'false',
-            typeid: '1',
-            room: '1',
-            trainer: '1',
+            typeid: `${types[0].id}`,
+            room: `${rooms[0].id}`,
+            trainer: `${trainers[0].id}`,
             comment: '',
         })
         setShowNewButton(true);
@@ -203,10 +203,10 @@ function LessonsPage() {
             {showModalEdit && <Modal onClose={handleCloseModal} >
                 <div className="text-xl p-4">{message}</div>
                 <div className="flex flex-col gap-2">
-                    {formData.comment && <div className="flex flex-row gap-4">
+                    <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Комментарий</label>
-                        <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.comment} name="comment" onChange={handleInputChange} />
-                    </div>}
+                        <input placeholder="Комментарий" className="p-1 hover:bg-blue-600/10" type="text" value={formData.comment ? formData.comment : ""} name="comment" onChange={handleInputChange} />
+                    </div>
                     {showNewButton ?
                         <div className="flex flex-row gap-4">
                             <label className="text-gray-500 w-32">Тип</label>

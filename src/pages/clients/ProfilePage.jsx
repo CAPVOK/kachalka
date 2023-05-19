@@ -84,7 +84,7 @@ function ProfilePage() {
                             Карта
                         </div>
                         <div>
-                            {cards.length > 0 ? cards.find((card) => card.id === user.card).name : user.card}
+                        {(cards.length > 0 && user.card ) ? cards.find((card) => card.id === Number(user.card)).name : 'Нет карты'}
                         </div>
                     </div>
                     <div className="flex flex-row justify-start gap-4 text-xl">
