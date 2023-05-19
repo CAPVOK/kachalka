@@ -1,5 +1,5 @@
 use chrono::{NaiveDate, NaiveTime};
-use sqlx::postgres::{PgPoolOptions, types};
+use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres, Row};
 use tauri::State;
 
@@ -65,6 +65,16 @@ struct Type {
     name: String,
 }
 
+#[derive(serde::Serialize)]
+struct LessonNoTime {
+    id: i32,
+    pay: bool,
+    typeid: i32,
+    room: i32,
+    trainer: i32,
+    comment: String,
+}
+
 #[tauri::command(rename_all = "snake_case")]
 async fn get_user_by_phone(
     state: State<'_, AppState>,
@@ -107,16 +117,23 @@ async fn get_user_by_phone(
 async fn get_all_users(
     state: State<'_, AppState>,
     user_type: &str,
+    condition: &str,
 ) -> Result<Option<Vec<User>>, String> {
     let query = match user_type {
-        "clients" => "SELECT id, name, surname, phone, age, card FROM clients ORDER BY id",
+        "clients" => format!(
+            "SELECT id, name, surname, phone, age, card FROM clients {}",
+            condition
+        ),
         "trainers" => {
-            "SELECT id, name, surname, phone, age, specialization FROM trainers ORDER BY id"
+            format!(
+                "SELECT id, name, surname, phone, age, specialization FROM trainers {}",
+                condition
+            )
         }
         _ => return Ok(None),
     };
 
-    let rows = sqlx::query(query)
+    let rows = sqlx::query(&query)
         .fetch_all(&state.pool)
         .await
         .map_err(|e| format!("{}", e))?;
@@ -289,25 +306,27 @@ async fn get_inventory(state: State<'_, AppState>) -> Result<Option<Vec<Inventor
 }
 
 #[tauri::command(rename_all = "snake_case")]
-async fn get_lessons(state: State<'_, AppState>) -> Result<Option<Vec<Lesson>>, String> {
-    let rows = sqlx::query("Select id, to_char(date, 'YYYY-MM-DD') as date, to_char(time, 'HH24:MI:SS') as time, pay, typeid, room, trainer, comment from lessons ORDER BY date")
+async fn get_lessons(
+    state: State<'_, AppState>,
+    condition: &str,
+) -> Result<Option<Vec<Lesson>>, String> {
+    let rows = sqlx::query(&format!("SELECT id, date::text, time::text, pay, typeid, room, trainer, comment FROM lessons {} ORDER BY date, time", condition))
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| format!("{}", e))?;    
+    .map_err(|e| format!("{}", e))?;
 
     let mut lessons = vec![];
 
     for row in rows {
-
         let lesson = Lesson {
             id: row.get("id"),
             date: row.get("date"),
             time: row.get("time"),
-            pay: row.get("pay"),
+            pay: row.try_get("pay").unwrap_or(false),
             typeid: row.get("typeid"),
             room: row.get("room"),
             trainer: row.get("trainer"),
-            comment: row.get("comment"),
+            comment: row.try_get("comment").unwrap_or("".to_string()),
         };
         lessons.push(lesson);
     }
@@ -317,7 +336,7 @@ async fn get_lessons(state: State<'_, AppState>) -> Result<Option<Vec<Lesson>>, 
 
 #[tauri::command(rename_all = "snake_case")]
 async fn get_types(state: State<'_, AppState>) -> Result<Option<Vec<Type>>, String> {
-    let rows = sqlx::query("Select * from types ORDER BY date")
+    let rows = sqlx::query("Select * from types")
         .fetch_all(&state.pool)
         .await
         .map_err(|e| format!("{}", e))?;
@@ -327,7 +346,7 @@ async fn get_types(state: State<'_, AppState>) -> Result<Option<Vec<Type>>, Stri
     for row in rows {
         let typer = Type {
             id: row.get("id"),
-            name: row.get("date"),
+            name: row.get("name"),
         };
         types.push(typer);
     }
@@ -335,6 +354,133 @@ async fn get_types(state: State<'_, AppState>) -> Result<Option<Vec<Type>>, Stri
     Ok(Some(types))
 }
 
+#[tauri::command(rename_all = "snake_case")]
+async fn get_lesson_clients(
+    state: State<'_, AppState>,
+    id: &str,
+) -> Result<Option<Vec<User>>, String> {
+    let rows = sqlx::query(&format!(
+        "SELECT clients.id, clients.name, clients.surname
+    FROM clients
+    INNER JOIN lesson_clients ON clients.id = lesson_clients.clientid
+    WHERE lesson_clients.lessonid = {}",
+        id
+    ))
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| format!("{}", e))?;
+
+    let mut clients = vec![];
+
+    for row in rows {
+        let client = User {
+            id: row.get("id"),
+            name: row.get("name"),
+            surname: row.get("surname"),
+            age: 0,
+            phone: String::new(),
+            user_type: String::new(),
+            card: 0,
+            specialization: String::new(),
+        };
+        clients.push(client);
+    }
+
+    Ok(Some(clients))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn get_lessons_with_client(
+    state: State<'_, AppState>,
+    id: i32,
+) -> Result<Option<Vec<Lesson>>, String> {
+    let rows = sqlx::query("SELECT lessons.id, lessons.date::text, lessons.time::text, lessons.pay, lessons.typeid, lessons.room, lessons.trainer, lessons.comment
+        FROM lessons
+        JOIN lesson_clients ON lessons.id = lesson_clients.lessonid
+        WHERE lesson_clients.clientid = $1
+        ORDER BY date, time")
+        .bind(id)
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|e| format!("{}", e))?;
+
+    let mut lessons = vec![];
+
+    for row in rows {
+        let lesson = Lesson {
+            id: row.get("id"),
+            date: row.get("date"),
+            time: row.get("time"),
+            pay: row.try_get("pay").unwrap_or(false),
+            typeid: row.get("typeid"),
+            room: row.get("room"),
+            trainer: row.get("trainer"),
+            comment: row.try_get("comment").unwrap_or("".to_string()),
+        };
+        lessons.push(lesson);
+    }
+
+    Ok(Some(lessons))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn get_lessons_without_client(
+    state: State<'_, AppState>,
+    id: i32,
+) -> Result<Option<Vec<Lesson>>, String> {
+    let rows = sqlx::query("SELECT lessons.id, lessons.date::text, lessons.time::text, lessons.pay, lessons.typeid, lessons.room, lessons.trainer, lessons.comment
+        FROM lessons
+        LEFT JOIN lesson_clients ON lessons.id = lesson_clients.lessonid AND lesson_clients.clientid = $1
+        WHERE lesson_clients.clientid IS NULL AND lessons.typeid != 2
+        ORDER BY date, time")
+        .bind(id)
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|e| format!("{}", e))?;
+
+    let mut lessons = vec![];
+
+    for row in rows {
+        let lesson = Lesson {
+            id: row.get("id"),
+            date: row.get("date"),
+            time: row.get("time"),
+            pay: row.try_get("pay").unwrap_or(false),
+            typeid: row.get("typeid"),
+            room: row.get("room"),
+            trainer: row.get("trainer"),
+            comment: row.try_get("comment").unwrap_or("".to_string()),
+        };
+        lessons.push(lesson);
+    }
+
+    Ok(Some(lessons))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn add_lesson_with_client(
+    state: State<'_, AppState>,
+    data: &str,
+    client_id: i32,
+) -> Result<Option<String>, String> {
+    let lesson_id: i32 = sqlx::query_scalar(&format!("INSERT INTO {} RETURNING id", data))
+        .fetch_one(&state.pool)
+        .await
+        .map_err(|e| {
+            format!("Failed to insert lesson: {}", e)
+        })?;
+
+    sqlx::query("INSERT INTO lesson_clients (clientid, lessonid) VALUES ($1, $2)")
+        .bind(client_id)
+        .bind(lesson_id)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| {
+            format!("Failed to insert lesson-client relation: {}", e)
+        })?;
+
+    Ok(Some(String::from("Успех!")))
+}
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -359,6 +505,10 @@ async fn main() -> Result<(), sqlx::Error> {
             get_categories,
             get_lessons,
             get_types,
+            get_lesson_clients,
+            get_lessons_with_client,
+            get_lessons_without_client,
+            add_lesson_with_client,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

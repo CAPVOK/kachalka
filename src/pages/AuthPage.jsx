@@ -2,7 +2,6 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch } from 'react-redux'
-import { useSelector } from "react-redux";
 import { saveUser } from "../api/UserSlice";
 
 import logo from "../images/logo.png"
@@ -22,13 +21,13 @@ function AuthPage () {
     }
 
     function logIn () {
-        navigate(`/admins/main`);
+        /* navigate(`/admins/main`); */
         if (!isValidPhoneNumber(phone) || password.length < 6) {
             setError('неверный номер или пароль');
             return;
         }
 
-        let userType = btnUser === 1 ? "admins" : (btnUser ===2 ? "trainers" : "clients");
+        let userType = btnUser === 1 ? "admins" : (btnUser === 2 ? "trainers" : "clients");
         
         invoke('get_user_by_phone', { phone: phone, password: password, user_type: userType})
         .then((ans)=>{

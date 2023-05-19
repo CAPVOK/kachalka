@@ -19,6 +19,8 @@ function InventoryPage() {
         roomid: '',
     });
 
+    console.log("inventory");
+
     const handleCloseModal = () => {
         setShowModalDelete(false);
         setShowModalEdit(false);
@@ -40,7 +42,7 @@ function InventoryPage() {
             invoke("edit_anything", { table: 'inventory', data: `description='${formData.description}', categoryid='${formData.categoryid}', roomid='${formData.roomid}'`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
-                    setCards([]);
+                    getCards();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -68,7 +70,7 @@ function InventoryPage() {
             .then((res) => {
                 setMessage(res);
                 setShowModalButton(false);
-                setCards([]);
+                getCards();
             })
             .catch((err) => { setMessage(err) })
     };
@@ -90,7 +92,7 @@ function InventoryPage() {
             invoke("new_anything", { data: `inventory ( description, categoryid, roomid ) VALUES ('${formData.description}', '${formData.categoryid}', '${formData.roomid}')` })
                 .then((res) => {
                     setMessage(res);
-                    setCards([]);
+                    getCards();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -104,17 +106,18 @@ function InventoryPage() {
         /*  */
     }
 
-    useEffect(() => {
+    const getCards = () => {
         invoke("get_inventory")
             .then((res) => {
                 setCards(res);
             })
             .catch((err) => { console.log(err) });
-    }, [cards])
+    };
 
-    useEffect(()=>{
-        invoke("get_rooms").then((res)=>{setRooms(res)}).catch((err)=>{console.log(err)});
-        invoke("get_categories").then((res)=>{setCategories(res)}).catch((err)=>{console.log(err)});
+    useEffect(() => {
+        getCards();
+        invoke("get_rooms").then((res) => { setRooms(res) }).catch((err) => { console.log(err) });
+        invoke("get_categories").then((res) => { setCategories(res) }).catch((err) => { console.log(err) });
     }, []);
 
     return (<>
@@ -135,7 +138,7 @@ function InventoryPage() {
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Помещение</label>
                         <select value={formData.roomid} onChange={handleInputChange} name="roomid" >
-                            {rooms.map((room) =>    
+                            {rooms.map((room) =>
                                 <option key={room.id} value={room.id}>{room.name}</option>
                             )}
                         </select>
@@ -177,8 +180,8 @@ function InventoryPage() {
                             <tr key={card.id} className="hover:bg-gray-100">
                                 <td className="px-6 py-4 whitespace-nowrap">{card.id}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{card.description}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{rooms.length>0 ? rooms.find((room) => room.id === card.roomid).name : card.roomid}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{categories.length>0 ? categories.find((category) => category.id === card.categoryid).name : card.categoryid}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{rooms.length > 0 ? rooms.find((room) => room.id === card.roomid).name : card.roomid}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{categories.length > 0 ? categories.find((category) => category.id === card.categoryid).name : card.categoryid}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <button className="text-indigo-600 hover:text-indigo-900 mr-2" onClick={() => { setSelectedUser(card); handlePrevEdit(card) }}>
                                         Edit

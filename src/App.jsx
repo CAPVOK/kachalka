@@ -13,8 +13,16 @@ import { TrainersPage } from "./pages/admins/TrainersPage";
 import { CardsPage } from "./pages/admins/CardsPage";
 import { InventoryPage } from "./pages/admins/InventoryPage";
 import { CategoriesPage } from "./pages/admins/CategoriesPage";
-import {LessonsPage } from "./pages/admins/LessonsPage";
+import { LessonsPage } from "./pages/admins/LessonsPage";
 
+import { NavClient } from "./components/NavClient";
+import { MyLessonsPage } from "./pages/clients/MyLessonsPage";
+import { NewLessonsPage } from "./pages/clients/NewLessonsPage";
+import { ProfilePage } from "./pages/clients/ProfilePage";
+
+import { NavTrainer } from "./components/NavTrainer";
+import { FutureLessonsPage } from "./pages/trainers/FutureLessonsPage";
+import { TrainerProfilePage } from "./pages/trainers/TrainerProfilePage";
 
 function App() {
 
@@ -37,6 +45,17 @@ function App() {
             <Route path='inventory' element={<InventoryPage />} />
             <Route path='categories' element={<CategoriesPage />} />
             <Route path='lessons' element={<LessonsPage />} />
+          </Route>
+
+          <Route path="/clients" element={<NavClient />}>
+            <Route path='main' element={<ProfilePage />} />
+            <Route path='myLessons' element={<MyLessonsPage />} />
+            <Route path='newLessons' element={<NewLessonsPage />} />
+          </Route>
+
+          <Route path="/trainers" element={<NavTrainer />}>
+            <Route path='main' element={<TrainerProfilePage />} />
+            <Route path='myLessons' element={<FutureLessonsPage />} />
           </Route>
 
           <Route path='*' element={<NotFoundPage />} />

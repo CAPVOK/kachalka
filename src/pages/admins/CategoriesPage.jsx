@@ -16,6 +16,8 @@ function CategoriesPage() {
         name: "",
     });
 
+    console.log("cats");
+
     const handleCloseModal = () => {
         setShowModalDelete(false);
         setShowModalEdit(false);
@@ -37,7 +39,7 @@ function CategoriesPage() {
             invoke("edit_anything", { table: 'categories', data: `name='${formData.name}'`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
-                    setCards([]);
+                    getCategories();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -65,7 +67,7 @@ function CategoriesPage() {
             .then((res) => {
                 setMessage(res);
                 setShowModalButton(false);
-                setCards([]);
+                getCategories();
             })
             .catch((err) => { setMessage(err) })
     };
@@ -85,7 +87,7 @@ function CategoriesPage() {
             invoke("new_anything", { data: `categories ( name ) VALUES ('${formData.name}')` })
                 .then((res) => {
                     setMessage(res);
-                    setCards([]);
+                    getCategories();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -95,13 +97,17 @@ function CategoriesPage() {
         }
     }
 
-    useEffect(() => {
+    const getCategories = () => {
         invoke("get_categories")
             .then((res) => {
                 setCards(res);
             })
-            .catch((err) => { console.log(err) });
-    }, [cards])
+            .catch((err) => { console.log(err) })
+    };
+
+    useEffect(() => {
+        getCategories();
+    }, [])
 
     return (<>
         <div className="w-full h-full p-8  text-black">

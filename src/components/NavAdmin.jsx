@@ -15,7 +15,7 @@ function NavAdmin () {
             <NavLink to="categories" className={({isActive})=>(isActive ? active : noActive)}>Категории</NavLink>
             <NavLink to="/" className='flex p-4 font-bold rounded-lg border-2 border-red-500 text-white bg-red-500 scale-105'>Выйти</NavLink>
         </header>
-
+        
         <Outlet/>
     
     </>)

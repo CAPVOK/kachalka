@@ -17,6 +17,8 @@ function CardsPage() {
         discount: "",
     });
 
+    console.log("cards");
+
     const handleCloseModal = () => {
         setShowModalDelete(false);
         setShowModalEdit(false);
@@ -38,7 +40,7 @@ function CardsPage() {
             invoke("edit_anything", { table: 'cards', data: `name='${formData.name}', discount='${formData.discount}'`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
-                    setCards([]);
+                    getCards();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -66,7 +68,7 @@ function CardsPage() {
             .then((res) => {
                 setMessage(res);
                 setShowModalButton(false);
-                setCards([]);
+                getCards();
             })
             .catch((err) => { setMessage(err) })
     };
@@ -87,7 +89,7 @@ function CardsPage() {
             invoke("new_anything", { data: `cards ( name, discount ) VALUES ('${formData.name}', '${formData.discount}')` })
                 .then((res) => {
                     setMessage(res);
-                    setCards([]);
+                    getCards();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -97,13 +99,17 @@ function CardsPage() {
         }
     }
 
-    useEffect(() => {
+    const getCards = ()=>{
         invoke("get_cards")
             .then((res) => {
                 setCards(res);
             })
             .catch((err) => { console.log(err) });
-    }, [cards])
+    }
+
+    useEffect(() => {
+        getCards();
+    }, [])
 
     return (<>
         <div className="w-full h-full p-8  text-black">

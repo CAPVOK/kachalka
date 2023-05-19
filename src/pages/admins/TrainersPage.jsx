@@ -10,6 +10,7 @@ function TrainersPage() {
     const [message, setMessage] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
     const [showModalButton, setShowModalButton] = useState(true);
+    const [showNewButton, setShowNewButton] = useState(false);
     const [formData, setFormData] = useState({
         id: "",
         name: "",
@@ -19,8 +20,8 @@ function TrainersPage() {
         specialization: "",
         password: "",
     });
-    const [showNewButton, setShowNewButton] = useState(false);
 
+    console.log("trainers");
 
     const handleCloseModal = () => {
         setShowModalDelete(false);
@@ -43,7 +44,7 @@ function TrainersPage() {
             invoke("edit_anything", { table: 'trainers', data: `name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', specialization='${formData.specialization}'`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
-                    setUsers([]);
+                    getTrainers();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -71,7 +72,7 @@ function TrainersPage() {
             .then((res) => {
                 setMessage(res);
                 setShowModalButton(false);
-                setUsers([]);
+                getTrainers();
             })
             .catch((err) => { setMessage(err) })
     };
@@ -111,12 +112,16 @@ function TrainersPage() {
         /*  */
     }
 
-    useEffect(() => {
-        invoke("get_all_users", { user_type: "trainers" })
+    const getTrainers = () => {
+        invoke("get_all_users", { user_type: "trainers", condition: '' })
             .then((res) => {
                 setUsers(res);
             }).catch((err) => console.log(err));
-    }, [users])
+    }
+
+    useEffect(() => {
+        getTrainers();
+    }, [])
 
     return (<>
         <div className="w-full h-full p-8  text-black">

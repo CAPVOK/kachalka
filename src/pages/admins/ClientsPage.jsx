@@ -21,6 +21,7 @@ function ClientsPage() {
         card: "",
     });
 
+    console.log("clients")
 
     const handleCloseModal = () => {
         setShowModalDelete(false);
@@ -43,7 +44,7 @@ function ClientsPage() {
             invoke("edit_anything", { table: 'clients', data: `name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', card='${formData.card}'`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
-                    setUsers([]);
+                    getClients();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -71,7 +72,7 @@ function ClientsPage() {
             .then((res) => {
                 setMessage(res);
                 setShowModalButton(false);
-                setUsers([]);
+                getClients();
             })
             .catch((err) => { setMessage(err) })
     };
@@ -96,7 +97,7 @@ function ClientsPage() {
             invoke("new_anything", { data: `clients ( name, surname, age, phone, card, password ) VALUES ('${formData.name}', '${formData.surname}', '${formData.age}', '${formData.phone}', '${formData.card}', '${formData.password}')` })
                 .then((res) => {
                     setMessage(res);
-                    setUsers([]);
+                    getClients();
                 })
                 .catch((err) => {
                     setMessage(err);
@@ -110,14 +111,15 @@ function ClientsPage() {
         /*  */
     }
 
-    useEffect(() => {
-        invoke("get_all_users", { user_type: "clients" })
-            .then((res) => {
-                setUsers(res);
-            }).catch((err) => console.log(err));
-    }, [users])
+    const getClients = ()=>{
+        invoke("get_all_users", { user_type: "clients", condition: '' })
+        .then((res) => {
+            setUsers(res);
+        }).catch((err) => console.log(err));
+    };
 
     useEffect(() => {
+        getClients();
         invoke("get_cards")
             .then((res) => {
                 setCards(res);

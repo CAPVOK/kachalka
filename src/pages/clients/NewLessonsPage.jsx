@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api";
 import Modal from "../../components/Modal";
-import { Container } from "postcss";
+import { useSelector } from "react-redux";
 
-function LessonsPage() {
-    const [showModalDelete, setShowModalDelete] = useState(false);
+function NewLessonsPage() {
+    const [showModalAdd, setShowModalAdd] = useState(false);
     const [showModalEdit, setShowModalEdit] = useState(false);
     const [showNewButton, setShowNewButton] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
@@ -14,9 +14,6 @@ function LessonsPage() {
     const [rooms, setRooms] = useState([]);
     const [types, setTypes] = useState([]);
     const [trainers, setTrainers] = useState([]);
-    const [clients, setClients] = useState([]);
-    const [lessonClients, setLessonClients] = useState([]);
-    const [selectedNewClient, setSelectedNewClient] = useState([]);
 
     const [formData, setFormData] = useState({
         id: '',
@@ -30,24 +27,16 @@ function LessonsPage() {
     });
 
     console.log("lessons");
-
-    const handleDeleteClient = (client) => {
-        invoke("delete_anything", { table: "lesson_clients", condition: `WHERE clientid = '${client.id}' AND lessonid = ${selectedUser.id}` })
-            .then((res) => {
-                setMessage(res);
-                getLessonClients(selectedUser);
-            })
-            .catch((err) => { setMessage(err) })
-    };
+    const ClientId = useSelector((state) => state.user.user.id);
 
     const handleAddClient = () => {
         invoke("new_anything", {
             data: `lesson_clients ( clientid, lessonid ) 
-    VALUES ('${selectedNewClient}', '${selectedUser.id}')`
+    VALUES ('${ClientId}', '${selectedUser.id}')`
         })
             .then((res) => {
                 setMessage(res);
-                getLessonClients(selectedUser);
+                getLessons(selectedUser);
             })
             .catch((err) => {
                 setMessage(err);
@@ -55,8 +44,8 @@ function LessonsPage() {
     };
 
     const handleCloseModal = () => {
-        setShowModalDelete(false);
         setShowModalEdit(false);
+        setShowModalAdd(false);
         setMessage('');
     };
 
@@ -70,48 +59,9 @@ function LessonsPage() {
         });
     };
 
-    const handleEdit = () => {
-        console.log(formData);
-        if (formData.id && formData.room && formData.date && formData.time && formData.typeid && formData.trainer) {
-            invoke("edit_anything", {
-                table: 'lessons',
-                data: `room='${formData.room}', 
-            typeid='${formData.typeid}', 
-            pay='${formData.pay}', 
-            trainer='${formData.trainer}', 
-            date='${formData.date}', 
-            time='${formData.time}',
-            comment='${formData.comment}'`,
-                condition: `where id='${formData.id}'`
-            })
-                .then((res) => {
-                    setMessage(res);
-                    getLessons();
-                })
-                .catch((err) => {
-                    setMessage(err);
-                });
-        } else {
-            setMessage("Заполните все поля");
-        }
-    };
-
-    const handlePrevEdit = (user) => {
-        setMessage("Измените данные");
-        setFormData(user)
-        getLessonClients(user);
-        setShowNewButton(false);
-        setShowModalEdit(true);
-    };
-
-    const handleDelete = () => {
-        invoke("delete_anything", { table: "lessons", condition: `where id = '${selectedUser.id}'` })
-            .then((res) => {
-                setMessage(res);
-                getLessons();
-                handleCloseModal();
-            })
-            .catch((err) => { setMessage(err) })
+    const handlePrevAdd = (user) => {
+        setMessage(`Вы хотите записаться на тренировку ${user.date} ${user.time}`);
+        setShowModalAdd(true);
     };
 
     const validTime = () => {
@@ -138,7 +88,7 @@ function LessonsPage() {
             date: '',
             time: '',
             pay: 'false',
-            typeid: '1',
+            typeid: '2',
             room: '1',
             trainer: '1',
             comment: '',
@@ -149,10 +99,11 @@ function LessonsPage() {
 
     const handleNew = () => {
         if (validTime()) {
-            if (formData.room && formData.date && formData.time && formData.typeid && formData.trainer) {
-                invoke("new_anything", {
+            if (formData.room && formData.date && formData.time && formData.trainer) {
+                invoke("add_lesson_with_client", {
                     data: `lessons ( room, date, time, typeid, pay, trainer, comment ) 
-            VALUES ('${formData.room}', '${formData.date}', '${formData.time}', '${formData.typeid}', '${formData.pay}', '${formData.trainer}', '${formData.comment}')`
+            VALUES ('${formData.room}', '${formData.date}', '${formData.time}', '2', 'false', '${formData.trainer}', '${formData.comment}')`,
+                    client_id: ClientId,
                 })
                     .then((res) => {
                         setMessage(res);
@@ -167,22 +118,8 @@ function LessonsPage() {
         }
     }
 
-    const handlePrint = () => {
-        /*  */
-    }
-
-    const getLessonClients = (user) => {
-        invoke("get_lesson_clients", { id: `${user.id}` })
-            .then((res) => { 
-                setLessonClients(res); 
-                setSelectedNewClient(clients
-                    .filter((client) => !res.some((lessonClient) => lessonClient.id === client.id))[0].id)
-            })
-            .catch((err) => console.log(err));
-    };
-
     const getLessons = () => {
-        invoke("get_lessons", {condition: ""})
+        invoke("get_lessons_without_client", { id: ClientId })
             .then((res) => {
                 setLessons(res);
                 console.log(res);
@@ -195,7 +132,6 @@ function LessonsPage() {
         invoke("get_rooms").then((res) => { setRooms(res) }).catch((err) => { console.log(err) });
         invoke("get_types").then((res) => { setTypes(res) }).catch((err) => { console.log(err) });
         invoke("get_all_users", { user_type: "trainers", condition: '' }).then((res) => setTrainers(res)).catch((err) => console.log(err));
-        invoke("get_all_users", { user_type: "clients", condition: '' }).then((res) => setClients(res)).catch((err) => console.log(err));
     }, []);
 
     return (<>
@@ -203,33 +139,26 @@ function LessonsPage() {
             {showModalEdit && <Modal onClose={handleCloseModal} >
                 <div className="text-xl p-4">{message}</div>
                 <div className="flex flex-col gap-2">
-                    {formData.comment && <div className="flex flex-row gap-4">
+                    <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Комментарий</label>
                         <input className="p-1 hover:bg-blue-600/10" type="text" value={formData.comment} name="comment" onChange={handleInputChange} />
-                    </div>}
-                    {showNewButton ?
-                        <div className="flex flex-row gap-4">
-                            <label className="text-gray-500 w-32">Тип</label>
-                            <select value={formData.typeid} onChange={handleInputChange} name="typeid" >
-                                {types.map((type) =>
-                                    <option key={type.id} value={type.id}>{type.name}</option>
-                                )}
-                            </select>
-                        </div>
-                        :
-                        <div className="flex flex-row gap-4">
-                            <label className="text-gray-500 w-32">Тип</label>
-                            <div>{types.find((type) => type.id === formData.typeid).name}</div>
-                        </div>
-                    }
+                    </div>
+
+                    <div className="flex flex-row gap-4">
+                        <label className="text-gray-500 w-32">Тип</label>
+                        <div>Персональная тренировка</div>
+                    </div>
+
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Дата</label>
                         <input type="date" name="date" value={formData.date} onChange={handleInputChange} />
                     </div>
+
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Время</label>
                         <input type="time" name="time" value={formData.time} onChange={handleInputChange} />
                     </div>
+
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Зал</label>
                         <select value={formData.room} onChange={handleInputChange} name="room" >
@@ -238,6 +167,7 @@ function LessonsPage() {
                             )}
                         </select>
                     </div>
+
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Тренер</label>
                         <select value={formData.trainer} onChange={handleInputChange} name="trainer" >
@@ -246,58 +176,23 @@ function LessonsPage() {
                             )}
                         </select>
                     </div>
-                    <div className="flex flex-row gap-4">
-                        <label className="text-gray-500 w-32">Оплата</label>
-                        <select value={formData.pay} onChange={handleInputChange} name="pay" >
-                            <option value={true}>Оплачено</option>
-                            <option value={false}>Не оплачено</option>
-                        </select>
-                    </div>
-                    {!showNewButton && <>
-                        <div className="text-xl p-4">Участники:</div>
-                        <div className="w-full flex flex-col">
-                            {lessonClients.length > 0 && (
-                                lessonClients.map((client) => (
-                                    <div key={client.id} className="p-2 flex flex-row justify-between border-b-[1px] border-gray-300">
-                                        <div>
-                                            {client.name} {client.surname}
-                                        </div>
-                                        <button onClick={() => handleDeleteClient(client)} className="text-red-500 transition ease-in-out hover:scale-105 active:scale-110">Del</button>
-                                    </div>
-                                ))
-                            )}
 
-                            { !(selectedUser.typeid === 2 && lessonClients.length !== 0) && <div className="p-2 flex flex-row justify-between border-b-[1px] border-gray-300">
-                                <select value={selectedNewClient} onChange={(e) => setSelectedNewClient(e.target.value)}>
-                                    {clients
-                                        .filter((client) => !lessonClients.some((lessonClient) => lessonClient.id === client.id))
-                                        .map((client) => (
-                                            <option key={client.id} value={client.id}>
-                                                {client.name} {client.surname}
-                                            </option>
-                                        ))
-                                    }
-                                </select>
-                                <button onClick={() => handleAddClient()} className="text-blue-500 transition ease-in-out hover:scale-105 active:scale-110">Add</button>
-                            </div>}
-
-                        </div>
-                    </>
-
-                    }
                     <div>
                         <div className="h-36 flex flex-row items-center justify-between">
-                            {!showNewButton && <button onClick={handleDelete} className="bg-red-500 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Удалить</button>}
-                            {!showNewButton ? <button onClick={handleEdit} className="bg-blue-600 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Изменить</button> :
-                                <button onClick={handleNew} className="bg-blue-600 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Добавить</button>}
+                            <button onClick={handleNew} className="bg-blue-600 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Добавить</button>
                         </div>
                     </div>
+                </div>
+            </Modal>}
+            {showModalAdd && <Modal onClose={handleCloseModal} >
+                <div className="text-xl p-4">{message}</div>
+                <div className="h-36 flex flex-row items-center justify-center">
+                    <button onClick={handleAddClient} className="bg-blue-600 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Записаться</button>
                 </div>
             </Modal>}
             <div className="w-12/12 mx-auto mt-5">
                 <div className="w-full flex flex-row pb-4 gap-4">
                     <button onClick={handlePrevNew} className="bg-blue-600 rounded-lg h-min p-2 text-white transition ease-in-out hover:scale-105 active:scale-110">Добавить</button>
-                    <button onClick={handlePrint} className="bg-amber-600 rounded-lg h-min p-2 text-white transition ease-in-out hover:scale-105 active:scale-110">Печать</button>
                 </div>
                 <table className="min-w-full divide-y divide-gray-200 table-auto">
                     <thead className="bg-gray-100">
@@ -323,7 +218,7 @@ function LessonsPage() {
                                 <td className="px-6 py-4 whitespace-normal">{types.length > 0 ? types.find((type) => type.id === lesson.typeid).name : lesson.typeid}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{lesson.pay ? "Оплачено" : "Не оплачено"}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <button onClick={(() => { handlePrevEdit(lesson); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Подробнее</button>
+                                    <button onClick={(() => { handlePrevAdd(lesson); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Записаться</button>
                                 </td>
                             </tr>
                         </>
@@ -334,4 +229,4 @@ function LessonsPage() {
         </div>
     </>)
 }
-export { LessonsPage };
+export { NewLessonsPage };
