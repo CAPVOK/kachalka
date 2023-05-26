@@ -1,6 +1,7 @@
 import { Form, Link } from "react-router-dom"
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api";
+import { save } from "@tauri-apps/api/dialog"
 import Modal from "../../components/Modal";
 
 function TrainersPage() {
@@ -136,8 +137,28 @@ function TrainersPage() {
         }
     }
 
-    const handlePrint = () => {
-        invoke("print_trainers").then(() => console.log("Файл сохранен")).catch(() => aconsole.log("Файл не сохранен"));
+    const handlePrint = async () => {
+        const savePath = await save();
+        if(!savePath) return;
+
+        console.log({path: savePath, content: 
+            users.map((trainer) => {
+              const { name, surname, age, phone, specialization } = trainer;
+              return `${name} ${surname} ${age} ${phone} ${specialization}`;
+            })});
+
+        await invoke("print_anything_to_anywhere", {path: savePath, content: ["Мага Искандеров 30 +79990000000 Боевые искусства",
+        "Сергей Бегунов 28 +78881231231 Бег",
+        "Елена Ходько 32 +78888888888 Бег",
+        "Мария Чиллова 35 +77771231231 Йога",
+        "Ольга Растяжко 31 +77770000000 Йога",
+        "Петр Гантелич 30 +71231231231 Фитнес-тренер",
+        "Дмитрий Жимов 29 +79991234572 Фитнес-тренер",
+        "Кирилл Штангович 33 +79991234576 Фитнес-тренер",
+        "Талантбек Азимов 18 +79997777777 Боевые искусства"]})
+        .then((res)=>console.log(res))
+        .catch((err)=>console.log(err));
+        /* invoke("print_trainers").then(() => console.log("Файл сохранен")).catch(() => aconsole.log("Файл не сохранен")); */
     }
 
     const getTrainers = () => {

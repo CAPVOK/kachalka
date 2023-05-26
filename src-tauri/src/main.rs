@@ -8,6 +8,9 @@ use std::io::BufWriter;
 use std::io::Write;
 use tauri::State;
 
+mod print;
+use print::pdf;
+
 struct AppState {
     pool: Pool<Postgres>,
 }
@@ -547,6 +550,14 @@ async fn save_text_to_downloads(content: &str, filename: &str) -> std::io::Resul
     Ok(())
 }
 
+#[tauri::command(rename_all = "snake_case")]
+async fn print_anything_to_anywhere(content: Vec<&str>, path: &str) -> Result<(),()> {
+    
+    pdf(path, content);
+
+    Ok(())
+}
+
 async fn save_text_as_pdf(content: &str, filename: &str) -> std::io::Result<()> {
     
     // Create a new PDF document
@@ -591,6 +602,7 @@ async fn main() -> Result<(), sqlx::Error> {
             get_lessons_without_client,
             add_lesson_with_client,
             print_trainers,
+            print_anything_to_anywhere,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -16,6 +16,10 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "dialog": {
+        "open": true,
+        "save": true
       }
     },
     "bundle": {
@@ -41,8 +45,8 @@
         "fullscreen": false,
         "resizable": true,
         "title": "kachalka",
-        "width": 800,
-        "height": 600
+        "width": 1000,
+        "height": 800
       }
     ]
   }
