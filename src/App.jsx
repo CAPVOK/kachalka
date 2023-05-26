@@ -14,6 +14,7 @@ import { CardsPage } from "./pages/admins/CardsPage";
 import { InventoryPage } from "./pages/admins/InventoryPage";
 import { CategoriesPage } from "./pages/admins/CategoriesPage";
 import { LessonsPage } from "./pages/admins/LessonsPage";
+import { RoomsPage } from "./pages/admins/RoomsPage";
 
 import { NavClient } from "./components/NavClient";
 import { MyLessonsPage } from "./pages/clients/MyLessonsPage";
@@ -45,6 +46,7 @@ function App() {
             <Route path='inventory' element={<InventoryPage />} />
             <Route path='categories' element={<CategoriesPage />} />
             <Route path='lessons' element={<LessonsPage />} />
+            <Route path='rooms' element={<RoomsPage />} />
           </Route>
 
           <Route path="/clients" element={<NavClient />}>

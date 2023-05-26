@@ -23,6 +23,14 @@ function TrainersPage() {
 
     console.log("trainers");
 
+    const isValidAge = (age) => {
+        return age >= 18 ? true : false;
+    }
+
+    function isValidPhoneNumber(phoneNumber) {
+        return /^\+7\d{10}$/.test(phoneNumber) || /^(8\d{10})$/.test(phoneNumber);
+    }
+
     const handleCloseModal = () => {
         setShowModalDelete(false);
         setShowModalEdit(false);
@@ -41,6 +49,14 @@ function TrainersPage() {
 
     const handleEdit = () => {
         if (formData.name && formData.surname && formData.age && formData.specialization && formData.phone) {
+            if (!isValidAge(formData.age)) {
+                setMessage("Возраст не может быть меньше 18")
+                return;
+            }
+            if (!isValidPhoneNumber(formData.phone)) {
+                setMessage("Неверный формат номера телефона")
+                return;
+            }
             invoke("edit_anything", { table: 'trainers', data: `name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', specialization='${formData.specialization}'`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
@@ -94,6 +110,18 @@ function TrainersPage() {
 
     const handleNew = () => {
         if (formData.name && formData.surname && formData.age && formData.specialization && formData.phone && formData.password.toString()) {
+            if (!isValidAge(formData.age)) {
+                setMessage("Возраст не может быть меньше 18")
+                return;
+            }
+            if (!isValidPhoneNumber(formData.phone)) {
+                setMessage("Неверный формат номера телефона")
+                return;
+            }
+            if (formData.password.split("").length < 6) {
+                setMessage("Пароль не может быть меньше 6 символов")
+                return;
+            }
             console.log(`trainers ( name, surname, age, phone, specialization, password ) VALUES (name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', specialization='${formData.specialization}', password='${formData.password}')`);
             invoke("new_anything", { data: `trainers ( name, surname, age, phone, specialization, password ) VALUES ('${formData.name}', '${formData.surname}', '${formData.age}', '${formData.phone}', '${formData.specialization}', '${formData.password}')` })
                 .then((res) => {
@@ -108,8 +136,8 @@ function TrainersPage() {
         }
     }
 
-    const handlePrint =() => {
-        /*  */
+    const handlePrint = () => {
+        invoke("print_trainers").then(() => console.log("Файл сохранен")).catch(() => aconsole.log("Файл не сохранен"));
     }
 
     const getTrainers = () => {

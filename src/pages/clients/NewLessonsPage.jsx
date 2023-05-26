@@ -76,7 +76,12 @@ function NewLessonsPage() {
         date.setMilliseconds(0);
         let newDate = new Date();
         if (date.getTime() < newDate.getTime()) {
-            setMessage("Введите корректное время!")
+            setMessage("Эта тренировка уже прошла, введите правильное время")
+            return false;
+        }
+        const currentFormattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (!(currentFormattedTime >= '07:30' && currentFormattedTime <= '22:30') || (formData.time.slice(3, 5) % 10 !== 0)) {
+            setMessage("Выберите время с 7:30 до 22:30 с интервалом 30 мин")
             return false;
         }
         return true;
@@ -100,10 +105,10 @@ function NewLessonsPage() {
 
     const handleNew = () => {
         if (validTime()) {
-            if (formData.room && formData.date && formData.time && formData.trainer) {
+            if (formData.date && formData.time && formData.trainer) {
                 invoke("add_lesson_with_client", {
                     data: `lessons ( room, date, time, typeid, pay, trainer, comment ) 
-            VALUES ('${formData.room}', '${formData.date}', '${formData.time}', '2', 'false', '${formData.trainer}', '${formData.comment}')`,
+            VALUES ('2', '${formData.date}', '${formData.time}', '2', 'false', '${formData.trainer}', '${formData.comment}')`,
                     client_id: ClientId,
                 })
                     .then((res) => {
@@ -120,10 +125,28 @@ function NewLessonsPage() {
         }
     }
 
+    function filterFutureLessons(lessons) {
+        const currentTime = new Date();
+
+        const futureLessons = lessons.filter((lesson) => {
+            const lessonDateTime = new Date(lesson.date + ' ' + lesson.time);
+            return lessonDateTime > currentTime;
+        });
+
+        return futureLessons;
+    }
+
+    function isDateTimeInFuture(date, time) {
+        const currentTime = new Date();
+        const dateTime = new Date(date + ' ' + time);
+
+        return dateTime > currentTime;
+    }
+
     const getLessons = () => {
         invoke("get_lessons_without_client", { id: ClientId })
             .then((res) => {
-                setLessons(res);
+                setLessons(filterFutureLessons(res));
                 console.log(res);
             })
             .catch((err) => { console.log(err) });
@@ -163,11 +186,7 @@ function NewLessonsPage() {
 
                     <div className="flex flex-row gap-4">
                         <label className="text-gray-500 w-32">Зал</label>
-                        <select value={formData.room} onChange={handleInputChange} name="room" >
-                            {rooms.map((room) =>
-                                <option key={room.id} value={room.id}>{room.name}</option>
-                            )}
-                        </select>
+                        <div>Главный зал</div>
                     </div>
 
                     <div className="flex flex-row gap-4">

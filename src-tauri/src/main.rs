@@ -1,6 +1,11 @@
-use chrono::{NaiveDate, NaiveTime};
+use directories::UserDirs;
+use printpdf::*;
+use printpdf::{PdfDocument, PdfLayer, PdfLayerReference, PdfPage};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres, Row};
+use std::fs::File;
+use std::io::BufWriter;
+use std::io::Write;
 use tauri::State;
 
 struct AppState {
@@ -136,7 +141,7 @@ async fn get_all_users(
     let rows = sqlx::query(&query)
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut clients = vec![];
 
@@ -191,7 +196,7 @@ async fn delete_anything(
     sqlx::query(&format!("DELETE FROM {} {}", table, condition))
         .execute(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     Ok(Some("Удаление прошло успешно.".to_string()))
 }
@@ -206,7 +211,7 @@ async fn edit_anything(
     sqlx::query(&format!("UPDATE {} SET {} {}", table, data, condition))
         .execute(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     Ok(Some("Вы успешно изменили данные!".to_string()))
 }
@@ -216,7 +221,7 @@ async fn new_anything(state: State<'_, AppState>, data: &str) -> Result<Option<S
     sqlx::query(&format!("INSERT INTO {} ", data))
         .execute(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     Ok(Some("Вы успешно добавили данные!".to_string()))
 }
@@ -226,7 +231,7 @@ async fn get_cards(state: State<'_, AppState>) -> Result<Option<Vec<Card>>, Stri
     let rows = sqlx::query("Select * from cards ORDER BY id")
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut cards = vec![];
 
@@ -247,7 +252,7 @@ async fn get_rooms(state: State<'_, AppState>) -> Result<Option<Vec<Room>>, Stri
     let rows = sqlx::query("Select * from rooms ORDER BY id")
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut rooms = vec![];
 
@@ -268,7 +273,7 @@ async fn get_categories(state: State<'_, AppState>) -> Result<Option<Vec<Categor
     let rows = sqlx::query("Select * from categories ORDER BY id")
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut categories = vec![];
 
@@ -288,7 +293,7 @@ async fn get_inventory(state: State<'_, AppState>) -> Result<Option<Vec<Inventor
     let rows = sqlx::query("Select * from inventory ORDER BY id")
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut inventories = vec![];
 
@@ -313,7 +318,7 @@ async fn get_lessons(
     let rows = sqlx::query(&format!("SELECT id, date::text, time::text, pay, typeid, room, trainer, comment FROM lessons {} ORDER BY date, time", condition))
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| format!("{}", e))?;
+    .map_err(|e| format!("Ошибка"))?;
 
     let mut lessons = vec![];
 
@@ -339,7 +344,7 @@ async fn get_types(state: State<'_, AppState>) -> Result<Option<Vec<Type>>, Stri
     let rows = sqlx::query("Select * from types")
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut types = vec![];
 
@@ -368,7 +373,7 @@ async fn get_lesson_clients(
     ))
     .fetch_all(&state.pool)
     .await
-    .map_err(|e| format!("{}", e))?;
+    .map_err(|e| format!("Ошибка"))?;
 
     let mut clients = vec![];
 
@@ -402,7 +407,7 @@ async fn get_lessons_with_client(
         .bind(id)
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut lessons = vec![];
 
@@ -436,7 +441,7 @@ async fn get_lessons_without_client(
         .bind(id)
         .fetch_all(&state.pool)
         .await
-        .map_err(|e| format!("{}", e))?;
+        .map_err(|e| format!("Ошибка"))?;
 
     let mut lessons = vec![];
 
@@ -466,20 +471,96 @@ async fn add_lesson_with_client(
     let lesson_id: i32 = sqlx::query_scalar(&format!("INSERT INTO {} RETURNING id", data))
         .fetch_one(&state.pool)
         .await
-        .map_err(|e| {
-            format!("Failed to insert lesson: {}", e)
-        })?;
+        .map_err(|e| format!("Ошибка"))?;
 
     sqlx::query("INSERT INTO lesson_clients (clientid, lessonid) VALUES ($1, $2)")
         .bind(client_id)
         .bind(lesson_id)
         .execute(&state.pool)
         .await
-        .map_err(|e| {
-            format!("Failed to insert lesson-client relation: {}", e)
-        })?;
+        .map_err(|e| format!("Failed to insert lesson-client relation: {}", e))?;
 
     Ok(Some(String::from("Успех!")))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+async fn print_trainers(state: State<'_, AppState>) -> Result<(), String> {
+    let rows = sqlx::query("select name, surname, age, phone, specialization from trainers")
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|e| format!("Ошибка: {}", e))?;
+
+    let mut trainers = vec![];
+
+    for row in rows {
+        let user = User {
+            id: 0,
+            name: row.get("name"),
+            surname: row.get("surname"),
+            age: row.get("age"),
+            phone: row.get("phone"),
+            user_type: String::new(),
+            card: String::new(),
+            specialization: row.get("specialization"),
+        };
+        trainers.push(user);
+    }
+
+    let content = trainers
+        .iter()
+        .map(|row| {
+            format!(
+                "{}, {}, {}, {}, {}",
+                row.name, row.surname, row.age, row.phone, row.specialization
+            )
+        })
+        .collect::<Vec<String>>()
+        .join("\n");
+
+    save_text_to_downloads(&content, "trainers")
+        .await
+        .map_err(|e| format!("Ошибка: {}", e))?;
+
+    Ok(())
+}
+
+async fn save_text_to_downloads(content: &str, filename: &str) -> std::io::Result<()> {
+    // Получаем доступ к стандартным директориям пользователя
+    if let Some(user_dirs) = UserDirs::new() {
+        // Получаем путь к папке загрузок
+        if let Some(download_dir) = user_dirs.download_dir() {
+            // Создаем полный путь к файлу
+            let file_path = download_dir.join(format!("{}.txt", filename));
+
+            // Открываем файл для записи
+            let mut file = std::fs::File::create(file_path)?;
+
+            // Записываем содержимое в файл
+            file.write_all(content.as_bytes())?;
+        } else {
+            println!("Не удалось получить путь к папке загрузок.");
+        }
+    } else {
+        println!("Не удалось получить доступ к стандартным директориям пользователя.");
+    }
+
+    Ok(())
+}
+
+async fn save_text_as_pdf(content: &str, filename: &str) -> std::io::Result<()> {
+    
+    // Create a new PDF document
+    let (doc, page1, layer1) =
+        PdfDocument::new("PDF_Document_title", Mm(247.0), Mm(210.0), "Layer 1");
+    
+    let (page2, layer1) = doc.add_page(Mm(10.0), Mm(250.0), "Page 2, Layer 1");
+    
+    doc.save(&mut BufWriter::new(
+        File::create("test_working.pdf").unwrap(),
+    ))
+    .unwrap();
+
+    Ok(())
 }
 
 #[tokio::main]
@@ -509,6 +590,7 @@ async fn main() -> Result<(), sqlx::Error> {
             get_lessons_with_client,
             get_lessons_without_client,
             add_lesson_with_client,
+            print_trainers,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

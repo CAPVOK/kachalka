@@ -39,8 +39,24 @@ function ClientsPage() {
         });
     };
 
+    const isValidAge = (age) => {
+        return age >= 7 ? true : false;
+    }
+
+    function isValidPhoneNumber(phoneNumber) {
+        return /^\+7\d{10}$/.test(phoneNumber) || /^(8\d{10})$/.test(phoneNumber);
+    }
+
     const handleEdit = () => {
         if (formData.name && formData.surname && formData.age && formData.phone) {
+            if (!isValidAge(formData.age)) {
+                setMessage("Возраст не может быть меньше 7")
+                return;
+            }
+            if (!isValidPhoneNumber(formData.phone)) {
+                setMessage("Неверный формат номера телефона")
+                return;
+            }
             invoke("edit_anything", { table: 'clients', data: `name='${formData.name}', surname='${formData.surname}', age='${formData.age}', phone='${formData.phone}', card='${!formData.card ? cards[0].id : formData.card} '`, condition: `where id='${formData.id}'` })
                 .then((res) => {
                     setMessage(res);
@@ -94,6 +110,18 @@ function ClientsPage() {
 
     const handleNew = () => {
         if (formData.name && formData.surname && formData.age && formData.card && formData.phone && formData.password) {
+            if (!isValidAge(formData.age)) {
+                setMessage("Возраст не может быть меньше 7")
+                return;
+            }
+            if (!isValidPhoneNumber(formData.phone)) {
+                setMessage("Неверный формат номера телефона")
+                return;
+            }
+            if (formData.password.split("").length < 6) {
+                setMessage("Пароль не может быть меньше 6 символов")
+                return;
+            }
             invoke("new_anything", { data: `clients ( name, surname, age, phone, card, password ) VALUES ('${formData.name}', '${formData.surname}', '${formData.age}', '${formData.phone}', '${formData.card}', '${formData.password}')` })
                 .then((res) => {
                     setMessage(res);
@@ -107,16 +135,16 @@ function ClientsPage() {
         }
     }
 
-    const handlePrint =() => {
-        /*  */
+    const handlePrint = () => {
+        /* generateContract(); */
     }
 
-    const getClients = ()=>{
+    const getClients = () => {
         invoke("get_all_users", { user_type: "clients", condition: '' })
-        .then((res) => {
-            setUsers(res);
-            console.log(res);
-        }).catch((err) => console.log(err));
+            .then((res) => {
+                setUsers(res);
+                console.log(res);
+            }).catch((err) => console.log(err));
     };
 
     useEffect(() => {
@@ -204,7 +232,7 @@ function ClientsPage() {
                                 <td className="px-6 py-4 whitespace-nowrap">{user.surname}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{user.age}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{user.phone}</td>
-                                <td className="px-6 py-4 whitespace-nowrap">{(cards.length > 0 && user.card ) ? cards.find((card) => card.id === Number(user.card)).name : 'Нет карты'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap">{(cards.length > 0 && user.card) ? cards.find((card) => card.id === Number(user.card)).name : 'Нет карты'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <button className="text-indigo-600 hover:text-indigo-900 mr-2" onClick={() => { setSelectedUser(user); handlePrevEdit(user) }}>
                                         Edit

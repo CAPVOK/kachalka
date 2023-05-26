@@ -10,6 +10,7 @@ function NavAdmin () {
             <NavLink to="main" className={({isActive})=>(isActive ? active : noActive)}>Клиенты</NavLink>
             <NavLink to="trainers" className={({isActive})=>(isActive ? active : noActive)}>Тренеры</NavLink>
             <NavLink to="lessons" className={({isActive})=>(isActive ? active : noActive)}>Занятия</NavLink>
+            <NavLink to="rooms" className={({isActive})=>(isActive ? active : noActive)}>Залы</NavLink>
             <NavLink to="inventory" className={({isActive})=>(isActive ? active : noActive)}>Инвентарь</NavLink>
             <NavLink to="cards" className={({isActive})=>(isActive ? active : noActive)}>Карты</NavLink>
             <NavLink to="categories" className={({isActive})=>(isActive ? active : noActive)}>Категории</NavLink>

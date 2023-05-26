@@ -71,28 +71,29 @@ function LessonsPage() {
     };
 
     const handleEdit = () => {
-        console.log(formData);
-        if (formData.id && formData.room && formData.date && formData.time && formData.typeid && formData.trainer) {
-            invoke("edit_anything", {
-                table: 'lessons',
-                data: `room='${formData.room}', 
+        if (validTime()) {
+            if (formData.id && formData.room && formData.date && formData.time && formData.typeid && formData.trainer) {
+                invoke("edit_anything", {
+                    table: 'lessons',
+                    data: `room='${formData.room}', 
             typeid='${formData.typeid}', 
             pay='${formData.pay}', 
             trainer='${formData.trainer}', 
             date='${formData.date}', 
             time='${formData.time}',
             comment='${formData.comment}'`,
-                condition: `where id='${formData.id}'`
-            })
-                .then((res) => {
-                    setMessage(res);
-                    getLessons();
+                    condition: `where id='${formData.id}'`
                 })
-                .catch((err) => {
-                    setMessage(err);
-                });
-        } else {
-            setMessage("Заполните все поля");
+                    .then((res) => {
+                        setMessage(res);
+                        getLessons();
+                    })
+                    .catch((err) => {
+                        setMessage(err);
+                    });
+            } else {
+                setMessage("Заполните все поля");
+            }
         }
     };
 
@@ -125,7 +126,12 @@ function LessonsPage() {
         date.setMilliseconds(0);
         let newDate = new Date();
         if (date.getTime() < newDate.getTime()) {
-            setMessage("Введите корректное время!")
+            setMessage("Эта тренировка уже прошла, введите правильное время")
+            return false;
+        }
+        const currentFormattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        if (!(currentFormattedTime >= '07:30' && currentFormattedTime <= '22:30') || (formData.time.slice(3, 5) % 10 !== 0)) {
+            setMessage("Выберите время с 7:30 до 22:30 с интервалом 30 мин")
             return false;
         }
         return true;
@@ -171,10 +177,17 @@ function LessonsPage() {
         /*  */
     }
 
+    function isDateTimeInFuture(date, time) {
+        const currentTime = new Date();
+        const dateTime = new Date(date + ' ' + time);
+
+        return dateTime > currentTime;
+    }
+
     const getLessonClients = (user) => {
         invoke("get_lesson_clients", { id: `${user.id}` })
-            .then((res) => { 
-                setLessonClients(res); 
+            .then((res) => {
+                setLessonClients(res);
                 setSelectedNewClient(clients
                     .filter((client) => !res.some((lessonClient) => lessonClient.id === client.id))[0].id)
             })
@@ -182,9 +195,9 @@ function LessonsPage() {
     };
 
     const getLessons = () => {
-        invoke("get_lessons", {condition: ""})
+        invoke("get_lessons", { condition: "" })
             .then((res) => {
-                setLessons(res);
+                setLessons(res.reverse());
                 console.log(res);
             })
             .catch((err) => { console.log(err) });
@@ -267,7 +280,7 @@ function LessonsPage() {
                                 ))
                             )}
 
-                            { !(selectedUser.typeid === 2 && lessonClients.length !== 0) && <div className="p-2 flex flex-row justify-between border-b-[1px] border-gray-300">
+                            {!(selectedUser.typeid === 2 && lessonClients.length !== 0) && <div className="p-2 flex flex-row justify-between border-b-[1px] border-gray-300">
                                 <select value={selectedNewClient} onChange={(e) => setSelectedNewClient(e.target.value)}>
                                     {clients
                                         .filter((client) => !lessonClients.some((lessonClient) => lessonClient.id === client.id))
@@ -314,7 +327,7 @@ function LessonsPage() {
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {lessons.map((lesson) => (<>
-                            <tr key={lesson.id} className="hover:bg-gray-100">
+                            <tr key={lesson.id} className={`${isDateTimeInFuture(lesson.date, lesson.time) ? 'font-medium' : " font-extralight"} hover:bg-gray-100`}>
                                 <td className="px-6 py-4 whitespace-nowrap">{lesson.id}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{lesson.date}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{lesson.time.slice(0, 5)}</td>

@@ -60,10 +60,10 @@ function ProfilePage() {
     }, [])
 
     return (<>
-        <div className="w-full h-full p-8 text-black  flex flex-row">
+        <div className="w-full h-full p-8 text-black">
             {showModalDelete && <Modal onClose={handleCloseModal} >
                 <div className="text-xl p-4">{message}</div>
-                <img src={billyAngel} alt="billy" />
+                {/* <img src={billyAngel} alt="billy" /> */}
                 {showModalButton && <div className="h-36 flex flex-row items-center justify-center">
                     <button onClick={handleDelete} className="bg-red-500 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Да!</button>
                 </div>}
@@ -100,7 +100,7 @@ function ProfilePage() {
                     <button onClick={handlePrevDelete} className="bg-red-500 rounded-lg h-min p-4 text-white transition ease-in-out hover:scale-105 active:scale-110">Удалить аккаунт</button>
                 </div>
             </div>
-            <img className="w-6/12" src={trump} alt="trump" />
+            {/* <img className="w-6/12" src={trump} alt="trump" /> */}
         </div>
     </>)
 }

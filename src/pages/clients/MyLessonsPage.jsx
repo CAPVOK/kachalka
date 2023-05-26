@@ -75,11 +75,18 @@ function MyLessonsPage() {
     const getLessons = () => {
         invoke("get_lessons_with_client", { id: ClientId })
             .then((res) => {
-                setLessons(res);
+                setLessons(res.reverse());
                 console.log(res);
             })
             .catch((err) => { console.log(err) });
     };
+
+    function isDateTimeInFuture(date, time) {
+        const currentTime = new Date();
+        const dateTime = new Date(date + ' ' + time);
+      
+        return dateTime > currentTime;
+      }
 
     useEffect(() => {
         getLessons();
@@ -126,7 +133,7 @@ function MyLessonsPage() {
                                 <td className="px-6 py-4 whitespace-normal">{types.length > 0 ? types.find((type) => type.id === lesson.typeid).name : lesson.typeid}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">{lesson.typeid === 2 ? (lesson.pay ? "Оплачено" : "Не оплачено") : "Оплачено"}</td>
                                 <td className="px-6 py-4 whitespace-normal flex flex-row justify-start">
-                                    <button onClick={(() => { handlePrevDelete(lesson); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Отменить</button>
+                                    {isDateTimeInFuture(lesson.date, lesson.time) && <button onClick={(() => { handlePrevDelete(lesson); setSelectedUser(lesson) })} className="text-red-500 hover:text-red-700 mr-2">Отменить</button>}
                                     {(lesson.typeid === 2 && !lesson.pay) && <button onClick={(() => { handlePrevPay(); setSelectedUser(lesson) })} className="text-indigo-600 hover:text-indigo-900 mr-2">Оплатить</button>}
                                 </td>
                             </tr>
