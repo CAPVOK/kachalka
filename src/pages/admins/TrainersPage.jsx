@@ -158,7 +158,6 @@ function TrainersPage() {
         "Талантбек Азимов 18 +79997777777 Боевые искусства"]})
         .then((res)=>console.log(res))
         .catch((err)=>console.log(err));
-        /* invoke("print_trainers").then(() => console.log("Файл сохранен")).catch(() => aconsole.log("Файл не сохранен")); */
     }
 
     const getTrainers = () => {
